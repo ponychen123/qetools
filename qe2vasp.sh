@@ -1,4 +1,5 @@
 #!/bin/bash
+#20190603 add alat qe format support
 #this script trafer QE input file into POSCAR format
 #usage: ./qe2vasp.sh inputfile
 #ponychen
@@ -9,17 +10,23 @@
 cellbegin=`grep -in "CELL_PARAMETERS" $1 | awk ' BEGIN{FS=":"} {print $1+1}'`
 cellend=$(($cellbegin+2))
 
-cellord=`grep -i "CELL_PARAMETERS" $1 | awk '{print $2}'`
-if [ "$cellord" == "angstrom" ];then
+cellord=`grep -i "CELL_PARAMETERS" $1 | awk '{print $2}' | tr [A-Z] [a-z]`
+if [ "$cellord" == "angstrom" ] || [ "$cellord" == "{angstrom}" ];then
     eval $(awk -v begin=$cellbegin -v end=$cellend '
        NR>=begin && NR<=end {x0[NR]=$1;y0[NR]=$2;z0[NR]=$3}
      END{for(i=begin;i<=end;i++){
      printf("cell[%d]=\"   %9.6f\t%9.6f\t%9.6f\"\n",i,x0[i],y0[i],z0[i])}}' $1)
- elif [ "$cellord" == "bohr" ];then
+ elif [ "$cellord" == "bohr" ] || [ "$cellord" == "{bohr}" ];then
      eval $(awk -v begin=$cellbegin -v end=$cellend '
        NR>=begin && NR<=end {x0[NR]=$1*0.5292;y0[NR]=$2*0.5292;z0[NR]=$3*0.5292}
        END{for(i=begin;i<=end;i++){
         printf("cell[%d]=\"   %9.6f\t%9.6f\t%9.6f\"\n",i,x0[i],y0[i],z0[i])}}' $1)
+	elif [ "$cellord" == "alat" ] || [ "$cellord" == "{alat}" ];then
+		celldm=`grep "celldm(1)" $1 | awk '{print $3*0.5292}'` || celldm=`grep "A " $1 | awk '{print $3}'`
+     eval $(awk -v begin=$cellbegin -v end=$cellend -v celldm=$celldm '
+      NR>=begin && NR<=end {x0[NR]=$1*celldm;y0[NR]=$2*celldm;z0[NR]=$3*celldm}
+      END{for(i=begin;i<=end;i++){
+      printf("cell[%d]=\"   %9.6f\t%9.6f\t%9.6f\"\n",i,x0[i],y0[i],z0[i])}}' $1)
 	else
 		echo "sorry, at present not support this format"
 	fi
@@ -40,8 +47,8 @@ do
 done
 atomend=$(($itr-2))
 
-atomord=`grep -i "ATOMIC_POSITIONS" $1 | awk '{print $2}'`
-if [ "$atomord" == "angstrom" ] || [ "$atomord" == "crystal" ];then
+atomord=`grep -i "ATOMIC_POSITIONS" $1 | awk '{print $2}' | tr [A-Z] [a-z]`
+if [ "$atomord" == "angstrom" ] || [ "$atomord" == "crystal" ] || [ "$atomord" == "{crystal}" ] || [ "$atomord" == "{angstrom}" ];then
 	eval $(awk -v begin=$atombegin -v end=$atomend '
 	       NR>=begin && NR<=end {x0[NR]=$2;y0[NR]=$3;z0[NR]=$4;u[NR]=$5;v[NR]=$6;w[NR]=$7}
 	   END{for(i=begin;i<=end;i++){
@@ -49,9 +56,17 @@ if [ "$atomord" == "angstrom" ] || [ "$atomord" == "crystal" ];then
 	   if(v[i]==0){v[i]="F"}else{v[i]="T"}
 	   if(w[i]==0){w[i]="F"}else{w[i]="T"}
 	   printf("atom[%d]=\"\t%9.6f\t%9.6f\t%9.6f\t%s\t%s\t%s\"\n",i,x0[i],y0[i],z0[i],u[i],v[i],w[i])}}' $1)
-   elif [ "$atomord" == "bohr" ];then
+   elif [ "$atomord" == "bohr" ] || [ "$atomord" == "{bohr}" ];then
 	eval $(awk -v begin=$atombegin -v end=$atomend '
 	       NR>=begin && NR<=end {x0[NR]=$2*0.5292;y0[NR]=$3*0.5292;z0[NR]=$4*0.5292;u[NR]=$5;v[NR]=$6;w[NR]=$7}
+	   END{for(i=begin;i<=end;i++){
+	   if(u[i]==0){u[i]="F"}else{u[i]="T"}
+	   if(v[i]==0){v[i]="F"}else{v[i]="T"}
+	   if(w[i]==0){w[i]="F"}else{w[i]="T"}
+	   printf("atom[%d]=\"\t%9.6f\t%9.6f\t%9.6f\t%s\t%s\t%s\"\n",i,x0[i],y0[i],z0[i],u[i],v[i],w[i])}}' $1)
+   elif [ "$atomord" == "alat" ] || [ "$atomord" == "{alat}" ];then
+	eval $(awk -v begin=$atombegin -v end=$atomend -v celldm=$celldm'
+	       NR>=begin && NR<=end {x0[NR]=$2*celldm;y0[NR]=$3*celldm;z0[NR]=$4*celldm;u[NR]=$5;v[NR]=$6;w[NR]=$7}
 	   END{for(i=begin;i<=end;i++){
 	   if(u[i]==0){u[i]="F"}else{u[i]="T"}
 	   if(v[i]==0){v[i]="F"}else{v[i]="T"}
