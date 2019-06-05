@@ -85,7 +85,7 @@ do
 		eledir[$ini]=$i
 		elenum[$ini]=$((elenum[$ini]+1))
 	else
-		$ini=$(($ini+1))
+		ini=$(($ini+1))
 		eledir[$ini]=$i
 		elenum[$ini]=$((element[$ini]+1))
 		iniele=$i
