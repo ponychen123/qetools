@@ -19,7 +19,7 @@ if [ "$cellord" == "angstrom" ] || [ "$cellord" == "{angstrom}" ];then
      printf("cell[%d]=\"   %9.6f\t%9.6f\t%9.6f\"\n",i,x0[i],y0[i],z0[i])}}' $1)
  elif [ "$cellord" == "bohr" ] || [ "$cellord" == "{bohr}" ];then
      eval $(awk -v begin=$cellbegin -v end=$cellend '
-       NR>=begin && NR<=end {x0[NR]=$1*0.5292;y0[NR]=$2*0.5292;z0[NR]=$3*0.5292}
+       NR>=begin && NR<=end {x0[NR]=$1*0.5291772;y0[NR]=$2*0.5291772;z0[NR]=$3*0.5291772}
        END{for(i=begin;i<=end;i++){
         printf("cell[%d]=\"   %9.6f\t%9.6f\t%9.6f\"\n",i,x0[i],y0[i],z0[i])}}' $1)
 	elif [ "$cellord" == "alat" ] || [ "$cellord" == "{alat}" ];then
@@ -94,7 +94,7 @@ if [ "$atomord" == "angstrom" ] || [ "$atomord" == "crystal" ] || [ "$atomord" =
    elif [ "$atomord" == "bohr" ] || [ "$atomord" == "{bohr}" ];then
 	eval $(awk -v begin=$atombegin -v end=$atomend -v tol=$atomtol -v arr="${elespe[*]}" '
 	BEGIN{split(arr,ele," ")}
-	       NR>=begin && NR<=end {symbol[NR]=$1;x0[NR]=$2*0.5292;y0[NR]=$3*0.5292;z0[NR]=$4*0.5292;u[NR]=$5;v[NR]=$6;w[NR]=$7}
+	       NR>=begin && NR<=end {symbol[NR]=$1;x0[NR]=$2*0.5291772;y0[NR]=$3*0.5291772;z0[NR]=$4*0.5291772;u[NR]=$5;v[NR]=$6;w[NR]=$7}
 	   END{for(i=begin;i<=end;i++){
 	   if(u[i]==0){u[i]="F"}else{u[i]="T"}
 	   if(v[i]==0){v[i]="F"}else{v[i]="T"}
